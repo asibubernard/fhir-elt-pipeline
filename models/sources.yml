@@ -1,0 +1,13 @@
+version: 2
+
+sources:
+  - name: raw_fhir_data
+    description: "Raw FHIR resources ingested from source system in Bigquery"
+    database: health-dbt-portfolio
+    schema: raw_fhir_data  
+    tables:
+      - name: fhir_claims
+      - name: fhir_conditions
+      - name: fhir_encounters
+      - name: fhir_patients
+      - name: fhir_procedures
