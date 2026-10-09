@@ -1,0 +1,165 @@
+version: 2
+
+models:
+  - name: stg_fhir_patients
+    description: "FHIR patient data. Each row represents one patient"
+    columns:
+      - name: patient_id
+        description: "Unique ID for each patient" 
+        data_tests:
+          - not_null
+          - unique 
+      - name: birth_date
+        description: "Patient's date of birth"
+        data_tests:
+          - not_null
+      - name: gender
+        description: "Patient's gender"
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['male', 'female', 'other', 'unknown']
+
+  - name: stg_fhir_encounters
+    description: "FHIR visit data. Each row is one visit or encounter."
+    columns:
+      - name: encounter_id
+        description: "Unique ID for each visit/encounter"
+        data_tests:
+          - unique
+          - not_null 
+      - name: patient_id
+        description: "Links to the patient who had this visit/encounter."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_fhir_patients')
+                field: patient_id
+      - name: encounter_class
+        description: "Type of visit/encounter (e.g., inpatient, outpatient, emergency)"
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['AMB', 'EMER', 'HH', 'IMP', 'VR']
+
+  - name: stg_fhir_conditions
+    description: "FHIR health condition data. Each row represents one condition for a patient."
+    columns:
+      - name: condition_id
+        description: "Unique ID for each condition"
+        data_tests:
+          - unique
+          - not_null 
+      - name: patient_id
+        description: "Links to the patient who has this condition."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_fhir_patients')
+                field: patient_id
+      - name: encounter_id
+        description: "Links to the encounter/visit during which this condition was recorded."
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_fhir_encounters')
+                field: encounter_id
+      - name: condition_code
+        description: "Code for the condtion (ICD-10 or SNOMED)"
+        data_tests:
+          - not_null
+      - name: condition_description
+        description: "Human-readable name of the condition"
+        data_tests:
+          - not_null
+      - name: clinical_status
+        description: "Status to show whether condition is resolved or not"
+        data_tests:
+          - not_null 
+          - accepted_values:
+              arguments:
+                values: ["resolved", "active"]
+
+  - name: stg_fhir_procedures
+    description: "FHIR procedure data. Each row represents one procedure for a patient."
+    columns:
+      - name: procedure_id
+        description: "Unique ID for each procedure"
+        data_tests:
+          - unique
+          - not_null 
+      - name: patient_id
+        description: "Links to the patient who had this procedure."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_fhir_patients')
+                field: patient_id
+      - name: encounter_id
+        description: "Links to the encounter/visit during which this procedure was performed."
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_fhir_encounters')
+                field: encounter_id
+      - name: procedure_code
+        description: "Code for the procedure (CPT or SNOMED)"
+        data_tests:
+          - not_null
+      - name: procedure_description
+        description: "Human-readable name of the procedure"
+        data_tests:
+          - not_null
+
+  - name: stg_fhir_claims
+    description: "FHIR claim data. Each row is one insurance claim for a patient."
+    columns:
+      - name: claim_id
+        description: "Unique ID for each claim"
+        data_tests:
+          - unique
+          - not_null 
+      - name: encounter_id
+        description: "Links to the encounter/visit during which this claim was filed."
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_fhir_encounters')
+                field: encounter_id
+      - name: patient_id
+        description: "Links to the patient on this claim"
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_fhir_patients')
+                field: patient_id
+      - name: total_cost
+        description: "Total cost billed on the claim"
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+      - name: item_count
+        description: "Number of items/services on the claim"
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+      - name: claim_created_date
+        description: "Date the claim was filed/submitted"
+        data_tests:
+          - not_null
+      - name: service_start_date
+        description: "The date the billable service started."
+        data_tests:
+          - not_null
+      - name: service_end_date
+        description: "The date the billable service ended."

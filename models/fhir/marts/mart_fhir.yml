@@ -1,0 +1,92 @@
+version: 2
+
+models:
+  - name: dim_patient
+    description: "Patient dimension, one row per patient."
+    columns:
+      - name: patient_id 
+        data_tests:
+          - not_null
+          - unique
+  
+  - name: dim_conditions
+    description: "Patient dimension"
+
+  - name: dim_procedure
+    description: "Procedure dimension, one row per distinct procedure code."
+    columns:
+      - name: procedure_code
+        data_tests:
+          - not_null
+          - unique
+
+  - name: dim_date 
+    description: "Calender dimension used for reporting by day, month, quarter, and year."
+    columns:
+      - name: date_key
+        data_tests:
+          - not_null
+          - unique
+  
+  - name: fact_claims
+    description: "Fact table with one row per insurance claim."
+    columns:
+      - name: claim_id
+        data_tests:
+          - not_null
+          - unique
+      - name: patient_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_patient')
+                field: patient_id
+      - name: total_cost
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+      - name: item_count
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+      - name: created_date
+        data_tests:
+          - not_null
+      - name: service_date
+        data_tests:
+          - not_null
+   
+
+  - name: fact_encounters
+    description: "Fact table recording each patient encounter (visit)."
+    columns:
+      - name: encounter_id
+        data_tests:
+          - not_null
+          - unique
+      - name: patient_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_patient')
+                field: patient_id
+      - name: encounter_class
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['AMB', 'EMER', 'HH', 'IMP', 'VR']
+      - name: start_date
+        data_tests:
+          - not_null
+      - name: end_date
+        data_tests:
+          - not_null
+
+  

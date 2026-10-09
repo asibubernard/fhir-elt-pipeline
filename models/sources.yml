@@ -7,7 +7,12 @@ sources:
     schema: raw_fhir_data  
     tables:
       - name: fhir_claims
+        description: "Raw FHIR claims data ingested from source system."
       - name: fhir_conditions
+        description: "Raw FHIR conditions data ingested from source system."
       - name: fhir_encounters
+        description: "Raw FHIR encounters data ingested from source system."
       - name: fhir_patients
+        description: "Raw FHIR patients data ingested from source system."
       - name: fhir_procedures
+        description: "Raw FHIR procedures data ingested from source system."

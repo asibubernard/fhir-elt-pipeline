@@ -1,0 +1,21 @@
+version: 2
+
+exposures:
+  - name: hospital_executive_dashboard
+    label: Hospital Executive Dashboard
+    description: "Executive dashboard showing patient activity, encounters,
+      claims, and claim costs for hospital leadership."
+    type: dashboard
+    maturity: high
+    url: https://looker.com/dashboards/hospital_executive
+    owner:
+      name: "Bernard Asibu"
+      email: "bernard.asibu@gmail.com"
+
+    depends_on:
+      - ref('fact_claims')
+      - ref('fact_encounters')
+      - ref('dim_patient')
+      - ref('dim_procedure')
+      - ref('dim_conditions')
+      - ref('dim_date')

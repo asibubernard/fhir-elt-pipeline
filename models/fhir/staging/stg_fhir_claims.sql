@@ -1,17 +1,20 @@
-with sources_claims as (
-    select *
-    from {{ source('raw_fhir_data', 'fhir_claims') }}
+with source_claims as (
+    select * from {{ source('raw_fhir_data', 'fhir_claims') }}
 ),
 
 renamed as (
     select
-        id as claim_id,
-        status as claim_status,
-        type as claim_type,
-        use as claim_use,
-        patient_id as patient_id,
-        created_at as claim_created_at,
-        updated_at as claim_updated_at
-    from sources_claims
+        claim_id,
+        encounter_id,
+        patient_id,
+        round(total_cost, 2) as total_cost,
+        item_count,
+        created_date as claim_created_date,
+        billable_period_start as service_start_date,
+        billable_period_end as service_end_date,
+        _ingested_at as ingested_at
+
+    from source_claims
 )
+
 select * from renamed   
