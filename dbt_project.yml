@@ -26,4 +26,12 @@ models:
   fhir_elt_pipeline:
     fhir:
       +materialized: view
+      
     
+seeds:
+  fhir_elt_pipeline:
+    condition_category_map:
+      +column_types:
+        condition_code: string
+        category: string
+        

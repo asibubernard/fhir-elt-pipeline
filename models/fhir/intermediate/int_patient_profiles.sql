@@ -1,13 +1,13 @@
 with patients as (
+    -- Staged FHIR patient demographics (one row per patient)
     select * from {{ ref('stg_fhir_patients') }}
 )
 
-select 
+select
     patient_id,
-    first_name,
-    last_name,    
     gender,
-    birth_date,
-    city
+    birth_year,
+    is_age_90_plus,
+    state
 
 from patients

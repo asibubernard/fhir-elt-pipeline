@@ -1,16 +1,13 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from google.cloud import bigquery
+from google.cloud.bigquery import Client  
 
-from . import config
-from . import extract
-from . import load
-from . import dead_letter
+from . import config, dead_letter, extract, load
 from .flatteners import FLATTENERS
 
 
 def process_and_load(source_generator):
-    bq_client = bigquery.Client(project=config.GCP_PROJECT_ID)
+    bq_client = Client(project=config.GCP_PROJECT_ID)
 
     load.ensure_dataset(bq_client)
 
@@ -39,13 +36,15 @@ def process_and_load(source_generator):
 
                 collected_data[table_name].append(flat_record)
 
-            except Exception as e:
-                dead_letters.append({
-                    "resource_type": resource_type,
-                    "error": str(e),
-                    "raw_resource": resource,
-                    "quarantined_at": datetime.now(timezone.utc).isoformat()
-                })
+            except Exception as e: # noqa: BLE001 - one bad record goes to dead letters
+                dead_letters.append(
+                    {
+                        "resource_type": resource_type,
+                        "error": str(e),
+                        "raw_resource": resource,
+                        "quarantined_at": datetime.now(UTC).isoformat(),
+                    }
+                )
                 print(f"⚠️  Quarantined a {resource_type} record: {e}")
 
     dead_letter.write_dead_letters(dead_letters)
@@ -58,8 +57,10 @@ def process_and_load(source_generator):
         load.merge_load(bq_client, table_name, records)
 
     if dead_letters:
-        print(f"\n⚠️  Run finished with {len(dead_letters)} quarantined record(s). "
-              f"Review the file(s) in {config.DEAD_LETTER_DIR}/ before assuming the load is complete.")
+        print(
+            f"\n⚠️  Run finished with {len(dead_letters)} quarantined record(s). "
+            f"Review the file(s) in {config.DEAD_LETTER_DIR}/ before assuming the load is complete."
+        )
 
 
 if __name__ == "__main__":

@@ -9,8 +9,14 @@ models:
         data_tests:
           - not_null
           - unique 
-      - name: birth_date
-        description: "Patient's date of birth"
+      - name: birth_year
+        description: "Patient's year of birth"
+        data_tests:
+          - not_null:
+              config:
+                where: "is_age_90_plus = false"
+      - name: is_age_90_plus
+        description: "Boolean indicating if the patient is 90 years old or older"
         data_tests:
           - not_null
       - name: gender
@@ -20,6 +26,10 @@ models:
           - accepted_values:
               arguments:
                 values: ['male', 'female', 'other', 'unknown']
+      - name: state
+        description: "Patient's state of residence"
+        data_tests:
+          - not_null
 
   - name: stg_fhir_encounters
     description: "FHIR visit data. Each row is one visit or encounter."

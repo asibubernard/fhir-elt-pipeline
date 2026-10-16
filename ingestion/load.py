@@ -1,8 +1,7 @@
 from google.cloud import bigquery
 from google.cloud.exceptions import NotFound
 
-from . import config
-from . import schemas
+from . import config, schemas
 
 
 def ensure_table(bq_client, table_ref, table_name):
@@ -38,7 +37,9 @@ def merge_load(bq_client, table_name, records):
 
     # (Re)create the staging table fresh for this run
     bq_client.delete_table(staging_ref, not_found_ok=True)
-    staging_table_obj = bigquery.Table(staging_ref, schema=schemas.TABLE_SCHEMAS[table_name])
+    staging_table_obj = bigquery.Table(
+        staging_ref, schema=schemas.TABLE_SCHEMAS[table_name]
+    )
     bq_client.create_table(staging_table_obj)
 
     job_config = bigquery.LoadJobConfig(
@@ -47,7 +48,9 @@ def merge_load(bq_client, table_name, records):
         schema=schemas.TABLE_SCHEMAS[table_name],
     )
     print(f"📦 Staging {len(records)} records for {table_name}...")
-    load_job = bq_client.load_table_from_json(records, staging_ref, job_config=job_config)
+    load_job = bq_client.load_table_from_json(
+        records, staging_ref, job_config=job_config
+    )
     load_job.result()
 
     # Build MERGE: update existing rows by key, insert new ones

@@ -1,13 +1,14 @@
 import json
-import requests
 from pathlib import Path
 
-from . import config
+import requests
 
+from . import config
 
 # ==========================================
 # Data retrieval functions
 # ==========================================
+
 
 def get_local_files():
     """Yield each FHIR bundle (parsed JSON) found in the local folder."""
@@ -17,15 +18,16 @@ def get_local_files():
         return
     for file_path in folder.glob("*.json"):
         try:
-            with open(file_path, 'r') as f:
+            with open(file_path, "r") as f:
                 yield json.load(f)
-        except Exception as e:
+        except (OSError, json.JSONDecodeError) as e:
             print(f"❌ Error reading {file_path}: {e}")
+
 
 def get_api_data():
     """Yield each FHIR bundle (page of results) fetched from the API,
     paging through up to max_pages per resource type."""
-    for resource_type in config.RESOURCE_TABLE_MAP.keys():
+    for resource_type in config.RESOURCE_TABLE_MAP:
         url = f"{config.FHIR_API_URL}/{resource_type}"
         params = {"_count": "50"}
         pages_fetched = 0
@@ -42,12 +44,21 @@ def get_api_data():
                     data = response.json()
                     yield data
                     links = data.get("link", [])
-                    next_link = next((link['url'] for link in links if link.get('relation') == 'next'), None)
+                    next_link = next(
+                        (
+                            link["url"]
+                            for link in links
+                            if link.get("relation") == "next"
+                        ),
+                        None,
+                    )
                     url = next_link
                     pages_fetched += 1
                 else:
-                    print(f"❌ API Error fetching {resource_type}: {response.status_code} - {response.text}")
+                    print(
+                        f"❌ API Error fetching {resource_type}: {response.status_code} - {response.text}"
+                    )
                     break
-            except Exception as e:
+            except requests.RequestException as e:
                 print(f"❌ Request failed for {resource_type}: {e}")
                 break

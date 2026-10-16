@@ -1,5 +1,13 @@
-
+__pycache__/
+*.pyc
+.ruff_cache/
 target/
 dbt_packages/
 logs/
+.env
+profiles.yml
+dbt-env/
+*service-account*.json
+*credentials*.json
 dbt_internal_packages/
+.venv/

@@ -1,17 +1,21 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any, cast
 
 # ==========================================
 # Helper functions
 # ==========================================
 
-def safe_scalar(value):
+
+def safe_scalar(value: Any) -> Any:
     """Ensure a value going into a STRING column is never a list.
     FHIR sometimes sends 'family' or 'display' style fields as a
     single-item array instead of a plain string. Grab the first
     element if so, otherwise pass the value through unchanged."""
     if isinstance(value, list):
-        return value[0] if value else None
+        values = cast(list[Any], value)
+        return values[0] if values else None
     return value
+
 
 def safe_extract_code(codeable_concept):
     """Helper to extract the first coding code and display from a FHIR CodeableConcept."""
@@ -22,6 +26,7 @@ def safe_extract_code(codeable_concept):
         return safe_scalar(coding[0].get("code")), safe_scalar(coding[0].get("display"))
     return None, safe_scalar(codeable_concept.get("text"))
 
+
 def clean_reference(ref):
     """Strip a FHIR reference down to a plain ID.
     References can come as 'urn:uuid:<id>' (local Synthea bundles) or
@@ -31,9 +36,11 @@ def clean_reference(ref):
         return None
     return ref.replace("urn:uuid:", "").split("/")[-1]
 
+
 # ==========================================
 # Flattening functions
 # ==========================================
+
 
 def flatten_patient(resource):
     names = resource.get("name", [])
@@ -41,6 +48,7 @@ def flatten_patient(resource):
     last_name = safe_scalar(names[0].get("family")) if names else None
     addresses = resource.get("address", [])
     city = safe_scalar(addresses[0].get("city")) if addresses else None
+    state = safe_scalar(addresses[0].get("state")) if addresses else None
     return {
         "patient_id": resource.get("id"),
         "gender": safe_scalar(resource.get("gender")),
@@ -48,8 +56,10 @@ def flatten_patient(resource):
         "first_name": first_name,
         "last_name": last_name,
         "city": city,
-        "_ingested_at": datetime.now(timezone.utc).isoformat()
+        "state": state,
+        "_ingested_at": datetime.now(UTC).isoformat(),
     }
+
 
 def flatten_encounter(resource):
     patient_ref = resource.get("subject", {}).get("reference", "")
@@ -58,7 +68,9 @@ def flatten_encounter(resource):
     code, display = safe_extract_code(encounter_type)
     period = resource.get("period", {})
     class_field = resource.get("class")
-    class_value = class_field.get("code") if isinstance(class_field, dict) else class_field
+    class_value = (
+        class_field.get("code") if isinstance(class_field, dict) else class_field
+    )
     return {
         "encounter_id": resource.get("id"),
         "patient_id": patient_id,
@@ -68,8 +80,9 @@ def flatten_encounter(resource):
         "type_display": display,
         "start_time": period.get("start"),
         "end_time": period.get("end"),
-        "_ingested_at": datetime.now(timezone.utc).isoformat()
+        "_ingested_at": datetime.now(UTC).isoformat(),
     }
+
 
 def flatten_condition(resource):
     patient_ref = resource.get("subject", {}).get("reference", "")
@@ -78,7 +91,11 @@ def flatten_condition(resource):
     encounter_id = clean_reference(encounter_ref)
     code, display = safe_extract_code(resource.get("code"))
     status_obj = resource.get("clinicalStatus")
-    status = status_obj.get("coding", [{}])[0].get("code") if isinstance(status_obj, dict) else status_obj
+    status = (
+        status_obj.get("coding", [{}])[0].get("code")
+        if isinstance(status_obj, dict)
+        else status_obj
+    )
     return {
         "condition_id": resource.get("id"),
         "patient_id": patient_id,
@@ -87,8 +104,9 @@ def flatten_condition(resource):
         "display": display,
         "clinical_status": safe_scalar(status),
         "onset_date": safe_scalar(resource.get("onsetDateTime")),
-        "_ingested_at": datetime.now(timezone.utc).isoformat()
+        "_ingested_at": datetime.now(UTC).isoformat(),
     }
+
 
 def flatten_procedure(resource):
     patient_ref = resource.get("subject", {}).get("reference", "")
@@ -107,15 +125,16 @@ def flatten_procedure(resource):
         "status": safe_scalar(status),
         "start_time": period.get("start"),
         "end_time": period.get("end"),
-        "_ingested_at": datetime.now(timezone.utc).isoformat()
+        "_ingested_at": datetime.now(UTC).isoformat(),
     }
+
 
 def flatten_claim(resource):
     patient_ref = resource.get("patient", {}).get("reference", "")
     patient_id = clean_reference(patient_ref)
     items = resource.get("item", [])
 
-    # New: Find the encounter this claim belongs to 
+    # New: Find the encounter this claim belongs to
     encounter_id = None
     for item in items:
         encounter_refs = item.get("encounter", [])
@@ -126,7 +145,7 @@ def flatten_claim(resource):
     total_cost = 0.0
     for item in items:
         money = item.get("net") or item.get("unitPrice") or {}
-        total_cost += money.get("value") or 0 
+        total_cost += money.get("value") or 0
 
     if total_cost == 0 and "total" in resource:
         total_cost = resource.get("total", {}).get("value") or 0
@@ -141,8 +160,9 @@ def flatten_claim(resource):
         "created_date": resource.get("created"),
         "billable_period_start": billable_period.get("start"),
         "billable_period_end": billable_period.get("end"),
-        "_ingested_at": datetime.now(timezone.utc).isoformat()
+        "_ingested_at": datetime.now(UTC).isoformat(),
     }
+
 
 # ==========================================
 # Resource type -> flattener function
@@ -152,5 +172,5 @@ FLATTENERS = {
     "Encounter": flatten_encounter,
     "Condition": flatten_condition,
     "Procedure": flatten_procedure,
-    "Claim": flatten_claim
+    "Claim": flatten_claim,
 }

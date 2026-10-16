@@ -11,6 +11,7 @@ TABLE_SCHEMAS = {
         bigquery.SchemaField("first_name", "STRING", mode="NULLABLE"),
         bigquery.SchemaField("last_name", "STRING", mode="NULLABLE"),
         bigquery.SchemaField("city", "STRING", mode="NULLABLE"),
+        bigquery.SchemaField("state", "STRING", mode="NULLABLE"),
         bigquery.SchemaField("_ingested_at", "TIMESTAMP", mode="REQUIRED")
     ],
     "fhir_conditions": [

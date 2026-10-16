@@ -10,18 +10,35 @@ models:
           - unique
   
   - name: dim_conditions
-    description: "Patient dimension"
+    description: "Condition dimension, one row per distinct condition code."
+    columns:
+      - name: condition_code
+        description: "Code for the condition (ICD-10 or SNOMED)"
+        data_tests:
+          - not_null
+          - unique
+      - name: condition_description
+        description: "Human-readable name of the condition"
+        data_tests:
+          - not_null
+          - unique
 
   - name: dim_procedure
     description: "Procedure dimension, one row per distinct procedure code."
     columns:
       - name: procedure_code
+        description: "Code for the procedure (ICD-10 or SNOMED)"
+        data_tests:
+          - not_null
+          - unique
+      - name: procedure_description
+        description: "Human-readable name of the procedure"
         data_tests:
           - not_null
           - unique
 
-  - name: dim_date 
-    description: "Calender dimension used for reporting by day, month, quarter, and year."
+  - name: dim_date
+    description: "Calendar dimension used for reporting by day, month, quarter, and year."
     columns:
       - name: date_key
         data_tests:
@@ -54,13 +71,26 @@ models:
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
                 min_value: 0
+                max_value: 1000
       - name: created_date
         data_tests:
           - not_null
       - name: service_date
         data_tests:
           - not_null
-   
+      - name: encounter_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('fact_encounters')
+                field: encounter_id
+      - name: encounter_class
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['AMB', 'EMER', 'HH', 'IMP', 'VR']
 
   - name: fact_encounters
     description: "Fact table recording each patient encounter (visit)."
@@ -89,4 +119,35 @@ models:
         data_tests:
           - not_null
 
-  
+  - name: fact_conditions
+    description: "Fact table recording each condition for each patient."
+    columns:
+      - name: condition_id
+        data_tests:
+          - not_null
+          - unique
+      - name: patient_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_patient')
+                field: patient_id
+      - name: encounter_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('fact_encounters')
+                field: encounter_id
+      - name: condition_code
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_conditions')
+                field: condition_code
+      - name: recorded_date
+        description: "Date the condition was recorded in the EHR"
+        data_tests:
+          - not_null

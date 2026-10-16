@@ -1,0 +1,34 @@
+version: 2
+
+seeds:
+  - name: condition_category_map
+    description: "Reviewed mapping from SNOMED code to category. One row per code."
+    columns:
+      - name: condition_code
+        data_tests:
+          - unique
+          - not_null
+      - name: category
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - 'Allergic & Immune'
+                  - 'Cancer'
+                  - 'Cardiovascular'
+                  - 'Dental'
+                  - 'Gastrointestinal'
+                  - 'Infectious'
+                  - 'Injury & Trauma'
+                  - 'Mental & Behavioural'
+                  - 'Metabolic & Endocrine'
+                  - 'Musculoskeletal & Pain'
+                  - 'Neurological'
+                  - 'Pregnancy & Reproductive'
+                  - 'Renal'
+                  - 'Respiratory'
+                  - 'Skin'
+                  - 'Sleep'
+                  - 'Social & Administrative'
+                  - 'Symptoms'

@@ -2,17 +2,27 @@ with source_patients as (
     select * from {{ source('raw_fhir_data', 'fhir_patients') }}
 ),
 
+dated as (
+    select
+        *,
+        date_diff(current_date(), cast(birth_date as DATE), YEAR) as age_years
+    from source_patients
+),
+
 renamed as (
     select 
         patient_id,
         gender,
-        cast(birth_date as DATE) as birth_date,
-        {{ mask_phi('first_name') }} as first_name,
-        {{ mask_phi('last_name') }} as last_name,
-        city,
+        -- Safe Harbor: Year only, and no year for ages over 89
+        case 
+            when age_years > 89 then null
+            else extract(year from cast(birth_date as DATE))
+        end as birth_year,
+        coalesce(age_years >= 90, false) as is_age_90_plus,
+        state,
         _ingested_at as ingested_at
  
-    from source_patients
+    from dated
 )
 
 select * from renamed
