@@ -1,18 +1,14 @@
 """Prefect flow: load FHIR data into BigQuery, then run dbt build.
-
-Save as flow/health_pipeline.py inside the fhir_elt_pipeline folder.
-Not run yet: test with  python flow/health_pipeline.py
 """
 
 import os
 import subprocess
 import sys
-import apprise
 from pathlib import Path
 
+import apprise
 from dbt.cli.main import dbtRunner
 from prefect import flow, get_run_logger, task
-
 
 # Project root = the folder that holds dbt_project.yml and ingestion/
 # (this file lives in <root>/flows/, so go up one level)
@@ -23,6 +19,19 @@ INGESTION_TIMEOUT = 30 * 60
 DBT_TIMEOUT = 30 * 60
 FLOW_TIMEOUT = 75 * 60
 
+def notify_slack(title: str, body: str) -> bool:
+    """Send a message to Slack. Does nothing if no webhook is set.
+    A Slack problem must never fail the pipeline, so errors are swallowed."""
+    webhook = os.getenv("SLACK_WEBHOOK_URL")
+    if not webhook:
+        return False
+    try:
+        notifier = apprise.Apprise()
+        if not notifier.add(webhook):
+            return False # URL not recognized
+        return bool(notifier.notify(title=title, body=body))
+    except Exception:  # noqa: BLE001 - a Slack problem must never fail the pipeline
+        return False  # URL not recognized 
 
 def _status(run_result) -> str:
     """Return a dbt node status as plain lowercase text, e.g. 'pass', 'warn', 'fail'."""
@@ -89,16 +98,19 @@ def run_dbt_build(target: str) -> dict:
 
 @task
 def send_notification(summary: dict):
-    """Log a success message. Replace with Slack or email later."""
-    get_run_logger().info(
+    """Log a success message and tell Slack"""
+    message = (
         f"Pipeline finished: {summary['nodes']} dbt nodes ran, "
         f"{summary['warnings']} warning(s)."
     )
-
+    get_run_logger().info(message)
+    notify_slack("Health pipeline: success", message)
 
 def alert_on_failure(flow, flow_run, state):
-    """Runs when the flow fails. Replace the print with Slack or email later."""
-    print(f"Pipeline FAILED: {state.message}")
+    """Runs when the flow fails. Tell Slack."""
+    message = f"Pipeline FAILED: {state.message}"
+    print(message)
+    notify_slack("Health pipeline: FAILED", message)
 
 
 @flow(

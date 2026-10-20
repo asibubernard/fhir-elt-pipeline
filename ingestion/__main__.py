@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from google.cloud.bigquery import Client  
+from google.cloud.bigquery import Client
 
 from . import config, dead_letter, extract, load
 from .flatteners import FLATTENERS
