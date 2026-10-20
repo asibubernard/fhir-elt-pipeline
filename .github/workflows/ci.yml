@@ -9,45 +9,50 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test-dbt-models:
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      DBT_PROFILES_DIR: ci
+      GBQ_PROJECT_ID: ${{ secrets.GBQ_PROJECT_ID }}
+      GBQ_CI_DATASET: ${{ secrets.GBQ_CI_DATASET }}
 
     steps:
-      # 1. Get the code
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Same Python version as your laptop
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: pip
+          cache-dependency-path: requirements-dev.txt
 
-      # 3. Install the pinned packages (dbt, BigQuery, Prefect, ruff)
       - name: Install dependencies
         run: |
           pip install --upgrade pip
           pip install -r requirements-dev.txt
 
-      # 4. Cheap check first: stop here if the Python code has problems
+      # Cheap check first: Python only, needs no login
       - name: Lint Python code
         run: ruff check .
 
-      # 5. Log in to Google Cloud with the secret
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      # 6. Install the dbt packages (dbt_expectations and others)
       - name: Install dbt packages
         run: dbt deps
 
-      # 7. Build the models in a separate CI dataset and run all tests
+      # Needs deps, the ci profile and the login
+      - name: Lint SQL
+        run: sqlfluff lint models analyses tests
+
       - name: Build and test dbt project
-        run: dbt build --profiles-dir ci
-        env:
-          GBQ_PROJECT_ID: ${{ secrets.GBQ_PROJECT_ID }}
-          GBQ_CI_DATASET: ${{ secrets.GBQ_CI_DATASET }}
+        run: dbt build

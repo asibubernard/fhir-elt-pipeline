@@ -1,0 +1,15 @@
+health_dbt:
+  target: ci
+  outputs:
+    ci:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('GBQ_PROJECT_ID', 'health-dbt-portfolio') }}"
+      dataset: "{{ env_var('GBQ_CI_DATASET', 'dbt_ci') }}"
+      threads: 4
+      timeout_seconds: 600
+      location: US
+      priority: interactive
+      retries: 2
+
+      
