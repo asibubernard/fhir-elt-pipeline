@@ -19,6 +19,6 @@ select
     pr.procedure_start_time,
     pr.procedure_end_time
 
-from procedures pr
-left join encounters e
+from procedures as pr
+left join encounters as e
     on pr.encounter_id = e.encounter_id

@@ -6,4 +6,4 @@ select
     count(*) as records
 from {{ ref('int_patient_conditions') }}
 where condition_category = 'Unmapped'
-group by 1, 2 
+group by 1, 2

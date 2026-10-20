@@ -13,5 +13,4 @@ select
     c.service_start_date,
     c.service_end_date
 
-from claims c
-
+from claims as c

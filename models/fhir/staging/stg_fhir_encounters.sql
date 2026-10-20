@@ -3,7 +3,7 @@ with source_encounters as (
 ),
 
 renamed as (
-    select 
+    select
         encounter_id,
         patient_id,
         status as encounter_status,
@@ -12,8 +12,8 @@ renamed as (
         type_display as encounter_type_description,
         cast(start_time as DATE) as start_date,
         cast(end_time as DATE) as end_date,
-        _ingested_at as ingested_at,
-   
+        _ingested_at as ingested_at
+
     from source_encounters
 )
 

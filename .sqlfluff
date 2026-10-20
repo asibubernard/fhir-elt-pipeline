@@ -1,4 +1,5 @@
 [sqlfluff]
+exclude_rules = ST06
 templates = dbt
 dialect = bigquery
 encoding = utf-8

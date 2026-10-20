@@ -22,6 +22,6 @@ select
     c.clinical_status,
     c.recorded_date
 
-from conditions c
-left join category_map m
+from conditions as c
+left join category_map as m
     on c.condition_code = m.condition_code

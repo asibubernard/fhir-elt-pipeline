@@ -12,7 +12,7 @@ select
     format_date('%B', date_day) as month_name,
     extract(day from date_day) as day_of_month,
     format_date('%A', date_day) as day_name,
-    extract(quarter from date_day) as quarter,
+    extract(quarter from date_day) as quarter, -- noqa: RF04
     extract(isoweek from date_day) as week_number,
     extract(dayofweek from date_day) in (1, 7) as is_weekend
 

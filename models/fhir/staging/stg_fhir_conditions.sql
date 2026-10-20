@@ -10,8 +10,8 @@ renamed as (
         code as condition_code,
         clinical_status,
         display as condition_description,
-        safe_cast(onset_date as timestamp) as recorded_date,
-        _ingested_at as ingested_at
+        _ingested_at as ingested_at,
+        safe_cast(onset_date as timestamp) as recorded_date
 
     from source_conditions
 )

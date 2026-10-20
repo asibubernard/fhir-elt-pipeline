@@ -17,6 +17,6 @@ select
     e.start_date,
     e.end_date
 
-from encounters e
-left join patients p
+from encounters as e
+left join patients as p
     on e.patient_id = p.patient_id

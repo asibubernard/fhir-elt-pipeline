@@ -4,7 +4,7 @@ select
     gender,
     state,
     birth_year,
-    case 
+    case
         when is_age_90_plus then '90+'
         when birth_year is null then 'Unknown'
         when extract(year from current_date()) - birth_year < 10 then '0-9'
@@ -17,5 +17,5 @@ select
         when extract(year from current_date()) - birth_year < 80 then '70-79'
         else '80-89'
     end as age_group
-    
+
 from {{ ref('int_patient_profiles') }}
