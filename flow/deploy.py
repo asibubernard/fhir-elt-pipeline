@@ -16,7 +16,7 @@ from prefect import flow
 
 def main():
     deployment_flow = flow.from_source(
-        source="https://github.com/asibubernard/YOUR-REPO.git",
+        source="https://github.com/asibubernard/fhir-elt-pipeline",
         # Path from the ROOT of the repo to the flow, then :flow_function_name.
         # If your repo root is above fhir_elt_pipeline, keep the folder name.
         entrypoint="fhir_elt_pipeline/flows/health_pipeline.py:health_pipeline",

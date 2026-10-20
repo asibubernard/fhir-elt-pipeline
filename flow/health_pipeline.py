@@ -1,16 +1,18 @@
 """Prefect flow: load FHIR data into BigQuery, then run dbt build.
 
-Save as flows/health_pipeline.py inside the fhir_elt_pipeline folder.
-Not run yet: test with  python flows/health_pipeline.py
+Save as flow/health_pipeline.py inside the fhir_elt_pipeline folder.
+Not run yet: test with  python flow/health_pipeline.py
 """
 
 import os
 import subprocess
 import sys
+import apprise
 from pathlib import Path
 
 from dbt.cli.main import dbtRunner
 from prefect import flow, get_run_logger, task
+
 
 # Project root = the folder that holds dbt_project.yml and ingestion/
 # (this file lives in <root>/flows/, so go up one level)
