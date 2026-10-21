@@ -15,7 +15,8 @@ select
     e.encounter_class,
     e.encounter_status,
     e.start_date,
-    e.end_date
+    e.end_date,
+    e.ingested_at
 
 from encounters as e
 left join patients as p

@@ -1,3 +1,9 @@
+{{ config(
+    materialized='incremental',
+    unique_key='encounter_id',
+    incremental_strategy='merge',
+) }}
+
 -- Fact table: one row per patient encounter (visit) with temporal data
 select
     e.encounter_id,
@@ -14,10 +20,17 @@ select
     d_end.date_key as end_date,
     d_end.year as end_year,
     d_end.month_name as end_month,
-    d_end.day_name as end_day
+    d_end.day_name as end_day,
+
+    e.ingested_at
 
 from {{ ref('int_patient_encounters') }} as e
 left join {{ ref('dim_date') }} as d_start
     on date(timestamp(e.start_date)) = d_start.date_key
 left join {{ ref('dim_date') }} as d_end
     on date(timestamp(e.end_date)) = d_end.date_key
+
+{% if is_incremental() %}
+-- Only process encounters loaded or changed since the last run of this model
+    where e.ingested_at >= (select max(e.ingested_at) from {{ this }})
+{% endif %}
