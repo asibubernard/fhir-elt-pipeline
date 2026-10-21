@@ -1,3 +1,4 @@
+   ![CI](https://github.com/asibubernard/fhir-elt-pipeline/actions/workflows/ci.yml/badge.svg)
 # FHIR ELT Pipeline
 
 A modern healthcare ELT pipeline that ingests FHIR (Fast Healthcare Interoperability Resources) data into Google BigQuery, transforms it with dbt, orchestrates workflows with Prefect, and produces analytics-ready healthcare datasets.
