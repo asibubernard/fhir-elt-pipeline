@@ -7,6 +7,7 @@ logs/
 .env
 profiles.yml
 !ci/profiles.yml
+ci/user.yml
 dbt-env/
 *service-account*.json
 *credentials*.json
